@@ -1,0 +1,5 @@
+# Config file for /etc/init.d/xvfb
+
+XVFB=/usr/bin/Xvfb
+XVFBARGS=":1 -screen 0 1600x1200x24"
+PIDFILE=/var/run/Xvfb.pid

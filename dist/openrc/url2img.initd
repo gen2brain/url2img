@@ -1,0 +1,24 @@
+#!/sbin/runscript
+# Copyright 1999-2016 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+name="url2img"
+description="Capture screenshots of websites"
+command_args="-bind-addr ${URL2IMG_BINDADDR} -log-file ${URL2IMG_LOGFILE} -cache-dir ${URL2IMG_CACHEDIR}"
+start_stop_daemon_args="--user ${URL2IMG_USER}"
+command_background="true"
+
+depend() {
+    need net
+}
+
+reload() {
+    ebegin "Reloading ${name}"
+    start-stop-daemon --exec \
+    env DISPLAY=:1 \
+    ${URL2IMG} \
+    --pidfile ${URL2IMG_PIDFILE} \
+    -s 1
+    eend $?
+}
