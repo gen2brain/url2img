@@ -133,6 +133,20 @@ Or if you use provided systemd services:
     # systemctl start xvfb@1
     # systemctl start url2img
 
+## Alternative: run in Docker container
+
+An alternative is to run everything in a container. Change to the `docker` directory and:
+
+    # Build container: `docker build -t url2img .`
+    # Then run container: `docker run -p 55888:55888 url2img`
+
+Output should be like this:
+
+```
+$ docker run -p 55888:55888 url2img
+running server on port 55888
+```
+
 ## Compile
 
 Install Qt bindings (https://github.com/therecipe/qt), follow instructions there and prepare installation.
