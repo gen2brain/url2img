@@ -5,11 +5,11 @@ url2img is HTTP server with API for capturing screenshots of websites.
 
 Example (command line):
 
-    $ curl -s https://api.url2img.com/?url=google.com > google.jpg
+    $ curl -s https://localhost:55888/?url=google.com > google.jpg
 
 Example (web browser):
 
-    https://api.url2img.com/?url=google.com
+    https://localhost:55888/?url=google.com
 
 ## API
 
@@ -105,12 +105,10 @@ If you use one of the provided init scripts just do a reload.
 ## Download
 
 Binaries are compiled with static Qt and X libraries. They should work on all recent systems (glibc >= 2.14, gcc (stdc++) >= 4.9) without installing additional dependencies.
-X server must be running.
-
 Systemd and OpenRC init scripts are included in dist/.
 
- - [Linux 32bit](https://url2img.com/download/url2img-1.0-32bit.tar.xz)
- - [Linux 64bit](https://url2img.com/download/url2img-1.0-64bit.tar.xz)
+ - [Linux 32bit](https://github.com/gen2brain/url2img/releases/download/1.0/url2img-1.0-32bit.tar.xz)
+ - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.0/url2img-1.0-64bit.tar.xz)
 
 ## Xserver
 
