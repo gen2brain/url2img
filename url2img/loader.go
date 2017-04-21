@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/hex"
+	"image/jpeg"
+	"image/png"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/chai2010/webp"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/webkit"
@@ -16,21 +20,23 @@ import (
 type Object struct {
 	core.QObject
 
-	_ func(data string)     `signal:load`
-	_ func(id, data string) `signal:loadFinished`
+	_ func(data string)     `signal:"load"`
+	_ func(id, data string) `signal:"loadFinished"`
 }
 
-// Image loader
+// Loader represents image loader
 type Loader struct {
 	*Object
 	*widgets.QWidget
 }
 
-// Returns new loader
+// NewLoader returns new loader
 func NewLoader() *Loader {
+	os.Setenv("QT_QPA_PLATFORM", "offscreen")
+
 	app := widgets.NewQApplication(len(os.Args), os.Args)
-	app.SetApplicationName(Name)
-	app.SetApplicationVersion(Version)
+	app.SetApplicationName(name)
+	app.SetApplicationVersion(version)
 
 	widget := widgets.NewQWidget(nil, 0)
 	widget.SetAttribute(core.Qt__WA_DontShowOnScreen, true)
@@ -42,7 +48,7 @@ func NewLoader() *Loader {
 		p := NewParams()
 		err := p.Unmarshal(data)
 		if err == nil {
-			l.LoadPage(p.Url, p.Id, p.Format, p.Quality, p.Delay, p.Width, p.Height, p.Zoom)
+			l.LoadPage(p.Url, p.Id, p.Format, p.Quality, p.Delay, p.Width, p.Height, p.Zoom, p.Full)
 		}
 	})
 
@@ -53,8 +59,8 @@ func NewLoader() *Loader {
 	return l
 }
 
-// Loads page
-func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height int, zoom float64) {
+// LoadPage loads page
+func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height int, zoom float64, full bool) {
 	view := webkit.NewQWebView(l.QWidget_PTR())
 	view.SetAttribute(core.Qt__WA_DontShowOnScreen, true)
 	view.Resize2(width, width)
@@ -72,6 +78,14 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 		}
 
+		if full {
+			frame := view.Page().MainFrame()
+			view.Page().SetViewportSize(frame.ContentsSize())
+			view.Resize(frame.ContentsSize())
+
+			height = view.Page().MainFrame().EvaluateJavaScript("document.body.offsetHeight").ToInt(true)
+		}
+
 		painter := gui.NewQPainter()
 		image := gui.NewQImage3(width, height, gui.QImage__Format_RGB888)
 
@@ -85,26 +99,38 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 
 		buff := core.NewQBuffer(view)
 		buff.Open(core.QIODevice__ReadWrite)
-		ok := image.Save2(buff, strings.ToUpper(format), quality)
-		if ok {
-			data := []byte(buff.Data().ConstData())
-			l.LoadFinished(id, hex.EncodeToString(data))
-		}
+
+		image.Save2(buff, "PNG", quality)
+		image.DestroyQImage()
+
+		w := new(bytes.Buffer)
+		r := bytes.NewReader([]byte(buff.Data().ConstData()))
 
 		buff.Close()
 		buff.DeleteLater()
 
-		image.DestroyQImage()
+		i, err := png.Decode(r)
+		if err == nil {
+			switch strings.ToUpper(format) {
+			case "PNG":
+				png.Encode(w, i)
+			case "JPG", "JPEG":
+				jpeg.Encode(w, i, &jpeg.Options{quality})
+			case "WEBP":
+				webp.Encode(w, i, &webp.Options{false, float32(quality)})
+			}
+		}
+
+		l.LoadFinished(id, hex.EncodeToString(w.Bytes()))
 
 		view.Page().DeleteLater()
 		view.DeleteLater()
-		view = nil
 	})
 
 	view.Load(core.NewQUrl3(url, core.QUrl__TolerantMode))
 }
 
-// Sets web page attributes
+// SetAttributes sets web page attributes
 func (l *Loader) SetAttributes(view *webkit.QWebView) {
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__AutoLoadImages, true)
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__JavascriptEnabled, true)
@@ -114,9 +140,9 @@ func (l *Loader) SetAttributes(view *webkit.QWebView) {
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__LocalContentCanAccessFileUrls, true)
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__LocalContentCanAccessRemoteUrls, true)
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__SiteSpecificQuirksEnabled, true)
-	view.Page().Settings().SetAttribute(webkit.QWebSettings__PrivateBrowsingEnabled, false)
+	view.Page().Settings().SetAttribute(webkit.QWebSettings__PrivateBrowsingEnabled, true)
 
-	view.Page().Settings().SetAttribute(webkit.QWebSettings__PluginsEnabled, true)
+	view.Page().Settings().SetAttribute(webkit.QWebSettings__PluginsEnabled, false)
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__JavaEnabled, false)
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__WebGLEnabled, false)
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__WebAudioEnabled, false)
@@ -132,7 +158,7 @@ func (l *Loader) SetAttributes(view *webkit.QWebView) {
 	view.Page().Settings().SetAttribute(webkit.QWebSettings__OfflineWebApplicationCacheEnabled, false)
 }
 
-// Sets storage path
+// SetPath sets storage path
 func (l *Loader) SetPath(view *webkit.QWebView, path string) {
 	view.Page().Settings().SetIconDatabasePath(path)
 	view.Page().Settings().SetLocalStoragePath(path)
@@ -140,7 +166,7 @@ func (l *Loader) SetPath(view *webkit.QWebView, path string) {
 	view.Page().Settings().SetOfflineWebApplicationCachePath(path)
 }
 
-// Starts Qt main loop
+// Exec starts Qt main loop
 func (l *Loader) Exec() {
 	widgets.QApplication_Exec()
 }

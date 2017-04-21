@@ -1,17 +1,16 @@
-url2img
-=======
+## url2img
 
 url2img is HTTP server with API for capturing screenshots of websites.
 
 Example (command line):
 
-    $ curl -s https://localhost:55888/?url=google.com > google.jpg
+    $ curl -s http://localhost:55888/?url=google.com > google.jpg
 
 Example (web browser):
 
-    https://localhost:55888/?url=google.com
+    http://localhost:55888/?url=google.com&output=html
 
-## API
+### API
 
 Name    | Type      | Default   | Description
 ----    | ----      | -------   | -----------
@@ -23,8 +22,9 @@ delay   | int       | 0         | Delay screenshot after page is loaded (millise
 width   | int       | 1600      | Viewport width
 height  | int       | 1200      | Viewport height
 zoom    | float     | 1.0       | Zoom factor
+full    | bool      | false     | Capture full page height
 
-## Usage
+### Usage
 
     Usage of url2img:
 
@@ -36,8 +36,6 @@ zoom    | float     | 1.0       | Zoom factor
             Path to htpasswd file, if empty auth is disabled
       -log-file string
             Path to log file, if empty logs to stdout
-      -plugins-dir string
-            Path to NPAPI plugins directory, if empty searches standard directories
       -max-age int
             Cache maximum age (seconds) (default 86400)
       -read-timeout int
@@ -45,7 +43,7 @@ zoom    | float     | 1.0       | Zoom factor
       -write-timeout int
             Write timeout (seconds) (default 15)
 
-## Auth
+### Auth
 
 If server is started with -htpasswd-file it will be protected with HTTP Basic Auth. Supports MD5, SHA1 and BCrypt (https://github.com/abbot/go-http-auth).
 
@@ -67,7 +65,7 @@ Examples:
     $ curl -s http://username:password@localhost:55888/?url=google.com > google.jpg
     $ curl --netrc-file my-password-file http://localhost:55888/?url=google.com > google.jpg
 
-## Cache
+### Cache
 
 If server is started with -cache-dir it will cache HTTP responses to disk according to RFC7234 (https://github.com/lox/httpcache).
 You can use -max-age to control maximum age of cache file, default is 86400 seconds (1 day).
@@ -97,43 +95,21 @@ Or you can send POST request with json body, POST requests are never cached:
 
     $ curl -X POST -d '{"url": "https://reddit.com", "format": "png"}' http://localhost:55888
 
-## Reload
+### Reload
 
 To reload server (e.g. when .htpasswd is changed or log file is rotated) send SIGHUP signal to process.
 If you use one of the provided init scripts just do a reload.
 
-## Download
+### Download
 
-Binaries are compiled with static Qt and X libraries. They should work on all recent systems (glibc >= 2.14, gcc (stdc++) >= 4.9) without installing additional dependencies.
+Binary is compiled with static Qt and X libraries. It should work on all recent systems (glibc >= 2.14, gcc (stdc++) >= 4.9) without any additional dependencies.
 Systemd and OpenRC init scripts are included in dist/.
 
- - [Linux 32bit](https://github.com/gen2brain/url2img/releases/download/1.0/url2img-1.0-32bit.tar.xz)
- - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.0/url2img-1.0-64bit.tar.xz)
+ - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.1/url2img-1.1-64bit.tar.xz)
 
-## Xserver
+### Alternative: run in Docker container
 
-On headless servers you can use [Xvfb](https://en.wikipedia.org/wiki/Xvfb).
-
-If you are running Debian or Ubuntu:
-
-    # apt-get install xvfb
-
-If you are running Fedora:
-
-    # dnf install xorg-x11-server-Xvfb
-
-Start server with xvfb-run:
-
-    # xvfb-run -n 0 -s '-screen 0 1600x1200x24' url2img
-
-Or if you use provided systemd services:
-
-    # systemctl start xvfb@1
-    # systemctl start url2img
-
-## Alternative: run in Docker container
-
-An alternative is to run everything in a container. Change to the `docker` directory and:
+An alternative is to run everything in a container. Change to the `dist/docker` directory and:
 
     # Build container: `docker build -t url2img .`
     # Then run container: `docker run -p 55888:55888 url2img`
@@ -145,26 +121,17 @@ $ docker run -p 55888:55888 url2img
 running server on port 55888
 ```
 
-## Compile
+### Compile
 
-Install Qt bindings (https://github.com/therecipe/qt), follow instructions there and prepare installation.
-
-Patch bindings to add QtWebKit support:
-
-    $ go get -d github.com/therecipe/qt
-    $ cd $GOPATH/src/github.com/therecipe/qt
-    $ curl -s -L https://gist.github.com/gen2brain/b680573e55c9a21b9299db21041d2465/raw/5bc6489cb114275a79c02802b74766fde1925c8d/qtwebkit.patch | patch -p1
-
-Install Qt5WebKit.
-
-Proceed with go get -v github.com/therecipe/qt/cmd/... and qtsetup.
+Install Qt bindings (https://github.com/therecipe/qt) with WebKit (see https://github.com/therecipe/qt#additional-modules).
 
 Install url2img to $GOPATH/bin:
 
     $ go get -d github.com/gen2brain/url2img
     $ go generate github.com/gen2brain/url2img/url2img
-    $ go install github.com/gen2brain/url2img/url2img
+    $ qtminimal linux $GOPATH/src/github.com/gen2brain/url2img/url2img
+    $ go install -tags minimal github.com/gen2brain/url2img/url2img
 
-## License
+### License
 
 url2img is free/libre software released under the terms of the GNU GPL license, see the 'COPYING' file for details.

@@ -4,11 +4,11 @@ Description=Capture screenshots of websites
 [Service]
 User=daemon
 Group=daemon
-Environment=DISPLAY=:1
 PIDFile=/run/url2img.pid
+ExecStartPre=/usr/bin/mkdir -p /var/cache/url2img
 ExecStart=/usr/local/bin/url2img -cache-dir /var/cache/url2img
-ExecReload=/bin/kill -HUP $MAINPID
-Restart=always
+ExecReload=/usr/bin/kill -HUP $MAINPID
+Restart=on-abnormal
 #MemoryLimit=1536M
 
 [Install]

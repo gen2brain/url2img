@@ -1,6 +1,6 @@
 # Config file for /etc/init.d/url2img
 
-# Binary
+# Path to binary
 URL2IMG="/usr/local/bin/url2img"
 
 # Bind address

@@ -16,7 +16,7 @@ import (
 	"github.com/lox/httpcache"
 )
 
-// HTTP server
+// Server represents HTTP server
 type Server struct {
 	Bind         string
 	Auth         *auth.BasicAuth
@@ -24,18 +24,17 @@ type Server struct {
 	LogFilePath  string
 	CacheDir     string
 	Htpasswd     string
-	PluginsDir   string
 	MaxAge       int
 	ReadTimeout  int
 	WriteTimeout int
 }
 
-// Returns new Server
+// NewServer returns new Server
 func NewServer() *Server {
 	return &Server{}
 }
 
-// Handles requests on incoming connections
+// ServeHTTP handles requests on incoming connections
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p := NewParams()
 
@@ -67,7 +66,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Load URL
 	loader.Load(d)
 
 	if !s.wait(p.Id) {
@@ -107,7 +105,56 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Waits for url to load, timeouts after ReadTimeout+WriteTimeout
+// ListenAndServe listens on the TCP address and serves requests
+func (s *Server) ListenAndServe() {
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	http.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("User-agent: *\nDisallow: /"))
+	})
+
+	s.open()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP)
+	go func() {
+		for {
+			<-c
+			s.open()
+		}
+	}()
+
+	if s.CacheDir != "" {
+		cache, err := httpcache.NewDiskCache(s.CacheDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(4)
+		}
+
+		handler := httpcache.NewHandler(cache, s)
+		http.Handle("/", newHandler(handler, s.LogFile, s.Auth))
+	} else {
+		http.Handle("/", newHandler(s, s.LogFile, s.Auth))
+	}
+
+	srv := &http.Server{
+		ReadTimeout:  time.Duration(s.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(s.WriteTimeout) * time.Second,
+	}
+
+	listener, err := net.Listen("tcp4", s.Bind)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, err.Error())
+		os.Exit(5)
+	}
+
+	go srv.Serve(listener)
+}
+
+// wait waits for url to load, timeouts after ReadTimeout+WriteTimeout
 func (s *Server) wait(id string) bool {
 	end := make(chan bool, 1)
 	timeout := time.After(time.Duration(s.ReadTimeout+s.WriteTimeout) * time.Second)
@@ -131,22 +178,22 @@ func (s *Server) wait(id string) bool {
 	return false
 }
 
-// Opens log and htpasswd file
-func (s *Server) Open() {
+// open opens log and htpasswd file
+func (s *Server) open() {
 	if s.Htpasswd != "" {
 		if _, err := os.Stat(s.Htpasswd); err != nil {
 			fmt.Fprintf(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 
-		s.Auth = auth.NewBasicAuthenticator(fmt.Sprintf("%s/%s", Name, Version), auth.HtpasswdFileProvider(s.Htpasswd))
+		s.Auth = auth.NewBasicAuthenticator(fmt.Sprintf("%s/%s", name, version), auth.HtpasswdFileProvider(s.Htpasswd))
 	}
 
 	if s.LogFile != nil {
 		s.LogFile.Close()
 	}
 
-	s.LogFile = os.Stderr
+	s.LogFile = os.Stdout
 	if s.LogFilePath != "" {
 		var err error
 		if _, err = os.Stat(s.LogFilePath); err == nil {
@@ -165,66 +212,8 @@ func (s *Server) Open() {
 	}
 }
 
-// Listens on the TCP address and serves requests
-func (s *Server) ListenAndServe() {
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	http.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("User-agent: *\nDisallow: /"))
-	})
-
-	if s.PluginsDir != "" {
-		// Set NPAPI plugins path
-		if st, err := os.Stat(s.PluginsDir); err == nil && st.IsDir() {
-			os.Setenv("QTWEBKIT_PLUGIN_PATH", s.PluginsDir)
-		}
-	}
-
-	s.Open()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGHUP)
-	go func() {
-		for {
-			<-c
-			s.Open()
-		}
-	}()
-
-	if s.CacheDir != "" {
-		cache, err := httpcache.NewDiskCache(s.CacheDir)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, err.Error())
-			os.Exit(4)
-		}
-
-		// Cache handler
-		handler := httpcache.NewHandler(cache, s)
-
-		http.Handle("/", NewHandler(handler, s.LogFile, s.Auth))
-	} else {
-		http.Handle("/", NewHandler(s, s.LogFile, s.Auth))
-	}
-
-	srv := &http.Server{
-		ReadTimeout:  time.Duration(s.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(s.WriteTimeout) * time.Second,
-	}
-
-	listener, err := net.Listen("tcp4", s.Bind)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
-		os.Exit(5)
-	}
-
-	go srv.Serve(listener)
-}
-
-// Wraps handler and logs requests (apache common log format + elapsed time and cache status)
-func NewHandler(handler http.Handler, file *os.File, auth *auth.BasicAuth) http.Handler {
+// newHandler wraps handler and logs requests (apache common log format + elapsed time and cache status)
+func newHandler(handler http.Handler, file *os.File, auth *auth.BasicAuth) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -244,7 +233,7 @@ func NewHandler(handler http.Handler, file *os.File, auth *auth.BasicAuth) http.
 		timeFormat := "02/Jan/2006:15:04:05 -0700"
 
 		rw := NewResponseWriter(w)
-		rw.Header().Set("Server", fmt.Sprintf("%s/%s", Name, Version))
+		rw.Header().Set("Server", fmt.Sprintf("%s/%s", name, version))
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 
 		userid := "-"
@@ -274,40 +263,4 @@ func NewHandler(handler http.Handler, file *os.File, auth *auth.BasicAuth) http.
 
 		fmt.Fprintf(file, pattern, ip, userid, formattedTime, request, rw.Status(), rw.Size(), elapsedTime.Seconds(), cacheStatus)
 	})
-}
-
-// http.ResponseWriter with size and status
-type responseWriter struct {
-	http.ResponseWriter
-
-	size   int
-	status int
-}
-
-// Returns new responseWriter
-func NewResponseWriter(w http.ResponseWriter) *responseWriter {
-	return &responseWriter{w, 0, 0}
-}
-
-// Writes the data to the connection as part of an HTTP reply
-func (w *responseWriter) Write(b []byte) (int, error) {
-	size, err := w.ResponseWriter.Write(b)
-	w.size += size
-	return size, err
-}
-
-// Sends an HTTP response header with status code
-func (w *responseWriter) WriteHeader(code int) {
-	w.status = code
-	w.ResponseWriter.WriteHeader(code)
-}
-
-// Returns response size
-func (w *responseWriter) Size() int {
-	return w.size
-}
-
-// Returns response status code
-func (w *responseWriter) Status() int {
-	return w.status
 }

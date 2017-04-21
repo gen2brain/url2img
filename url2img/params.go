@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// Parameters
+// Params represent parameters
 type Params struct {
 	Id      string  `json:"id"`
 	Url     string  `json:"url"`
@@ -22,31 +22,34 @@ type Params struct {
 	Width   int     `json:"width"`
 	Height  int     `json:"height"`
 	Zoom    float64 `json:"zoom"`
+	Full    bool    `json:"full"`
 }
 
+// Default and maximum values
 const (
 	defOutput = "raw"
 	defFormat = "jpg"
 
-	defQuality = 75
+	defQuality = 85
 	defDelay   = 0
 	defWidth   = 1600
 	defHeight  = 1200
 	defZoom    = 1.0
+	defFull    = false
 
 	maxQuality = 100
-	maxDelay   = 5000
+	maxDelay   = 10000
 	maxWidth   = 4096
 	maxHeight  = 4096
 	maxZoom    = 5.0
 )
 
-// Returns new params
+// Newparams returns new params
 func NewParams() Params {
 	return Params{}
 }
 
-// Gets params values from form
+// FormValues gets params values from form
 func (p *Params) FormValues(r *http.Request) (err error) {
 	p.Url = strings.TrimSpace(r.FormValue("url"))
 	if p.Url == "" {
@@ -63,7 +66,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		return
 	}
 
-	p.Output = "raw"
+	p.Output = defOutput
 	if r.FormValue("output") != "" {
 		p.Output = r.FormValue("output")
 		if !p.validOutput(p.Output) {
@@ -72,7 +75,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
-	p.Format = "jpg"
+	p.Format = defFormat
 	if r.FormValue("format") != "" {
 		p.Format = r.FormValue("format")
 		if !p.validFormat(p.Format) {
@@ -146,10 +149,15 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
+	p.Full = defFull
+	if r.FormValue("full") != "" {
+		p.Full = (r.FormValue("full") == "true" || r.FormValue("full") == "1")
+	}
+
 	return
 }
 
-// Gets params values from json body
+// BodyValues gets params values from json body
 func (p *Params) BodyValues(r *http.Request) (err error) {
 	decoder := json.NewDecoder(r.Body)
 	err = decoder.Decode(p)
@@ -173,7 +181,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Output == "" {
-		p.Output = "raw"
+		p.Output = defOutput
 	} else {
 		if !p.validOutput(p.Output) {
 			err = errors.New("invalid output " + p.Output)
@@ -182,7 +190,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Format == "" {
-		p.Format = "jpg"
+		p.Format = defFormat
 	} else {
 		if !p.validFormat(p.Format) {
 			err = errors.New("invalid format " + p.Format)
@@ -236,7 +244,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	return
 }
 
-// Marshals params to string
+// Marshal marshals params to string
 func (p *Params) Marshal() (string, error) {
 	data, err := json.Marshal(p)
 	if err != nil {
@@ -246,7 +254,7 @@ func (p *Params) Marshal() (string, error) {
 	return string(data), nil
 }
 
-// Unmarshals params from string
+// Unmarshal unmarshals params from string
 func (p *Params) Unmarshal(data string) error {
 	err := json.Unmarshal([]byte(data), p)
 	if err != nil {
@@ -256,7 +264,7 @@ func (p *Params) Unmarshal(data string) error {
 	return nil
 }
 
-// Generates random id
+// genId generates random id
 func (p *Params) genId() (err error) {
 	id := make([]byte, 16)
 	_, err = rand.Read(id)
@@ -268,9 +276,9 @@ func (p *Params) genId() (err error) {
 	return
 }
 
-// Checks if image format is valid
+// validformat checks if image format is valid
 func (p *Params) validFormat(format string) bool {
-	for _, f := range []string{"jpg", "png", "webp"} {
+	for _, f := range []string{"jpg", "jpeg", "png", "webp"} {
 		if f == format {
 			return true
 		}
@@ -278,7 +286,7 @@ func (p *Params) validFormat(format string) bool {
 	return false
 }
 
-// Checks if output is valid
+// validOutput checks if output is valid
 func (p *Params) validOutput(out string) bool {
 	for _, o := range []string{"raw", "base64", "html"} {
 		if o == out {
