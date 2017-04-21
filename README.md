@@ -17,7 +17,7 @@ Name    | Type      | Default   | Description
 url     | string    |           | Target URL (**required**), http(s):// prefix is optional
 output  | string    | raw       | Output format (raw, base64, html)
 format  | string    | jpg       | Image format (jpg, png, webp)
-quality | int       | 75        | Image quality
+quality | int       | 85        | Image quality
 delay   | int       | 0         | Delay screenshot after page is loaded (milliseconds)
 width   | int       | 1600      | Viewport width
 height  | int       | 1200      | Viewport height
