@@ -17,6 +17,8 @@ import (
 )
 
 //go:generate qtmoc
+
+// Object struct
 type Object struct {
 	core.QObject
 
@@ -79,11 +81,14 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 		}
 
 		if full {
-			frame := view.Page().MainFrame()
-			view.Page().SetViewportSize(frame.ContentsSize())
-			view.Resize(frame.ContentsSize())
+			js := `var d=document;
+				Math.max(Math.max(d.body.scrollHeight, d.documentElement.scrollHeight),
+				Math.max(d.body.offsetHeight, d.documentElement.offsetHeight),
+				Math.max(d.body.clientHeight, d.documentElement.clientHeight));`
+			height = view.Page().MainFrame().EvaluateJavaScript(js).ToInt(true)
 
-			height = view.Page().MainFrame().EvaluateJavaScript("document.body.offsetHeight").ToInt(true)
+			view.Page().SetViewportSize(core.NewQSize2(width, height))
+			view.Resize2(width, height)
 		}
 
 		painter := gui.NewQPainter()
@@ -115,9 +120,9 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 			case "PNG":
 				png.Encode(w, i)
 			case "JPG", "JPEG":
-				jpeg.Encode(w, i, &jpeg.Options{quality})
+				jpeg.Encode(w, i, &jpeg.Options{Quality: quality})
 			case "WEBP":
-				webp.Encode(w, i, &webp.Options{false, float32(quality)})
+				webp.Encode(w, i, &webp.Options{Lossless: false, Quality: float32(quality)})
 			}
 		}
 

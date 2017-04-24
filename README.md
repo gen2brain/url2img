@@ -105,7 +105,7 @@ If you use one of the provided init scripts just do a reload.
 Binary is compiled with static Qt and X libraries. It should work on all recent systems (glibc >= 2.14, gcc (stdc++) >= 4.9) without any additional dependencies.
 Systemd and OpenRC init scripts are included in dist/.
 
- - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.1/url2img-1.1-64bit.tar.xz)
+ - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.2/url2img-1.2-64bit.tar.xz)
 
 ### Alternative: run in Docker container
 

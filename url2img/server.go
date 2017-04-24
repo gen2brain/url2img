@@ -174,8 +174,6 @@ func (s *Server) wait(id string) bool {
 
 		time.Sleep(10 * time.Millisecond)
 	}
-
-	return false
 }
 
 // open opens log and htpasswd file

@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -44,7 +43,7 @@ const (
 	maxZoom    = 5.0
 )
 
-// Newparams returns new params
+// NewParams returns new params
 func NewParams() Params {
 	return Params{}
 }
@@ -53,7 +52,7 @@ func NewParams() Params {
 func (p *Params) FormValues(r *http.Request) (err error) {
 	p.Url = strings.TrimSpace(r.FormValue("url"))
 	if p.Url == "" {
-		err = errors.New("empty url")
+		err = fmt.Errorf("empty url")
 		return
 	}
 
@@ -70,7 +69,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 	if r.FormValue("output") != "" {
 		p.Output = r.FormValue("output")
 		if !p.validOutput(p.Output) {
-			err = errors.New("invalid output " + p.Output)
+			err = fmt.Errorf("invalid output %s", p.Output)
 			return
 		}
 	}
@@ -79,7 +78,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 	if r.FormValue("format") != "" {
 		p.Format = r.FormValue("format")
 		if !p.validFormat(p.Format) {
-			err = errors.New("invalid format " + p.Format)
+			err = fmt.Errorf("invalid format %s", p.Format)
 			return
 		}
 	}
@@ -92,7 +91,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 
 		if p.Quality > maxQuality {
-			err = errors.New(fmt.Sprintf("quality maximum is %d", maxQuality))
+			err = fmt.Errorf("quality maximum is %d", maxQuality)
 			return
 		}
 	}
@@ -105,7 +104,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 
 		if p.Delay > maxDelay {
-			err = errors.New(fmt.Sprintf("delay maximum is %d", maxDelay))
+			err = fmt.Errorf("delay maximum is %d", maxDelay)
 			return
 		}
 	}
@@ -118,7 +117,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 
 		if p.Width > maxWidth {
-			err = errors.New(fmt.Sprintf("width maximum is %d", maxWidth))
+			err = fmt.Errorf("width maximum is %d", maxWidth)
 			return
 		}
 	}
@@ -131,7 +130,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 
 		if p.Height > maxHeight {
-			err = errors.New(fmt.Sprintf("height maximum is %d", maxHeight))
+			err = fmt.Errorf("height maximum is %d", maxHeight)
 			return
 		}
 	}
@@ -144,7 +143,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 
 		if p.Zoom > maxZoom {
-			err = errors.New(fmt.Sprintf("zoom maximum is %f", maxZoom))
+			err = fmt.Errorf("zoom maximum is %f", maxZoom)
 			return
 		}
 	}
@@ -167,7 +166,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 
 	p.Url = strings.TrimSpace(p.Url)
 	if p.Url == "" {
-		err = errors.New("empty url")
+		err = fmt.Errorf("empty url")
 		return
 	}
 
@@ -184,7 +183,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 		p.Output = defOutput
 	} else {
 		if !p.validOutput(p.Output) {
-			err = errors.New("invalid output " + p.Output)
+			err = fmt.Errorf("invalid output %s", p.Output)
 			return
 		}
 	}
@@ -193,7 +192,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 		p.Format = defFormat
 	} else {
 		if !p.validFormat(p.Format) {
-			err = errors.New("invalid format " + p.Format)
+			err = fmt.Errorf("invalid format %s", p.Format)
 			return
 		}
 	}
@@ -202,14 +201,14 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 		p.Quality = defQuality
 	} else {
 		if p.Quality > maxQuality {
-			err = errors.New(fmt.Sprintf("quality maximum is %d", maxQuality))
+			err = fmt.Errorf("quality maximum is %d", maxQuality)
 			return
 		}
 	}
 
 	if p.Delay != 0 {
 		if p.Delay > maxDelay {
-			err = errors.New(fmt.Sprintf("delay maximum is %d", maxDelay))
+			err = fmt.Errorf("delay maximum is %d", maxDelay)
 			return
 		}
 	}
@@ -218,7 +217,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 		p.Width = defWidth
 	} else {
 		if p.Width > maxWidth {
-			err = errors.New(fmt.Sprintf("width maximum is %d", maxWidth))
+			err = fmt.Errorf("width maximum is %d", maxWidth)
 			return
 		}
 	}
@@ -227,7 +226,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 		p.Height = defHeight
 	} else {
 		if p.Height > maxHeight {
-			err = errors.New(fmt.Sprintf("height maximum is %d", maxHeight))
+			err = fmt.Errorf("height maximum is %d", maxHeight)
 			return
 		}
 	}
@@ -236,7 +235,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 		p.Zoom = defZoom
 	} else {
 		if p.Zoom > maxZoom {
-			err = errors.New(fmt.Sprintf("zoom maximum is %f", maxZoom))
+			err = fmt.Errorf("zoom maximum is %f", maxZoom)
 			return
 		}
 	}
