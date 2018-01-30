@@ -87,14 +87,31 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 				Math.max(d.body.clientHeight, d.documentElement.clientHeight));`
 			height = view.Page().MainFrame().EvaluateJavaScript(js).ToInt(true)
 
+			if height == 0 {
+				height = defHeight
+			} else if height > 32768 {
+				height = 32768
+			}
+
 			view.Page().SetViewportSize(core.NewQSize2(width, height))
 			view.Resize2(width, height)
 		}
 
-		painter := gui.NewQPainter()
 		image := gui.NewQImage3(width, height, gui.QImage__Format_RGB888)
+		if image.IsNull() {
+			l.LoadFinished(id, "")
+			view.DeleteLater()
+			return
+		}
 
+		painter := gui.NewQPainter()
 		painter.Begin(gui.NewQPaintDeviceFromPointer(image.Pointer()))
+		if !painter.IsActive() {
+			l.LoadFinished(id, "")
+			view.DeleteLater()
+			return
+		}
+
 		painter.SetRenderHint(gui.QPainter__Antialiasing, true)
 		painter.SetRenderHint(gui.QPainter__TextAntialiasing, true)
 		painter.SetRenderHint(gui.QPainter__HighQualityAntialiasing, true)
@@ -104,6 +121,11 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 
 		buff := core.NewQBuffer(view)
 		buff.Open(core.QIODevice__ReadWrite)
+		if !buff.IsWritable() {
+			l.LoadFinished(id, "")
+			view.DeleteLater()
+			return
+		}
 
 		image.Save2(buff, "PNG", quality)
 		image.DestroyQImage()
@@ -128,7 +150,6 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 
 		l.LoadFinished(id, hex.EncodeToString(w.Bytes()))
 
-		view.Page().DeleteLater()
 		view.DeleteLater()
 	})
 
