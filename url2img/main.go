@@ -2,8 +2,7 @@ package main
 
 import (
 	"flag"
-
-	"github.com/orcaman/concurrent-map"
+	"sync"
 )
 
 const (
@@ -13,14 +12,13 @@ const (
 
 var (
 	loader *Loader
-	loaded cmap.ConcurrentMap
+	loaded sync.Map
 )
 
 func main() {
 	loader = NewLoader()
-	loaded = cmap.New()
-
 	server := NewServer()
+
 	flag.StringVar(&server.Bind, "bind-addr", ":55888", "Bind address")
 	flag.StringVar(&server.LogFilePath, "log-file", "", "Path to log file, if empty logs to stdout")
 	flag.StringVar(&server.CacheDir, "cache-dir", "", "Path to cache directory, if empty caching is disabled")

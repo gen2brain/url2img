@@ -51,7 +51,7 @@ func NewLoader() *Loader {
 	})
 
 	l.ConnectLoadFinished(func(id, data string) {
-		loaded.Set(id, data)
+		loaded.Store(id, data)
 	})
 
 	return l

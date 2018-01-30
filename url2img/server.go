@@ -74,8 +74,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	str, _ := loaded.Get(p.Id)
-	loaded.Remove(p.Id)
+	str, _ := loaded.Load(p.Id)
+	loaded.Delete(p.Id)
 
 	data, err := hex.DecodeString(str.(string))
 	if err != nil {
@@ -166,7 +166,7 @@ func (s *Server) wait(id string) bool {
 	timeout := time.After(time.Duration(s.ReadTimeout+s.WriteTimeout) * time.Second)
 
 	for {
-		_, ok := loaded.Get(id)
+		_, ok := loaded.Load(id)
 		select {
 		case <-end:
 			return true
