@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"encoding/hex"
-	"image/jpeg"
-	"image/png"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/chai2010/webp"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/webkit"
@@ -99,7 +95,7 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 
 		image := gui.NewQImage3(width, height, gui.QImage__Format_RGB888)
 		if image.IsNull() {
-			l.LoadFinished(id, "")
+			l.LoadFinished(id, "ErrIsNull")
 			view.DeleteLater()
 			return
 		}
@@ -107,7 +103,7 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 		painter := gui.NewQPainter()
 		painter.Begin(gui.NewQPaintDeviceFromPointer(image.Pointer()))
 		if !painter.IsActive() {
-			l.LoadFinished(id, "")
+			l.LoadFinished(id, "ErrIsActive")
 			view.DeleteLater()
 			return
 		}
@@ -122,33 +118,23 @@ func (l *Loader) LoadPage(url, id, format string, quality, delay, width, height 
 		buff := core.NewQBuffer(view)
 		buff.Open(core.QIODevice__ReadWrite)
 		if !buff.IsWritable() {
-			l.LoadFinished(id, "")
+			l.LoadFinished(id, "ErrIsWritable")
 			view.DeleteLater()
 			return
 		}
 
-		image.Save2(buff, "PNG", quality)
-		image.DestroyQImage()
+		ok := image.Save2(buff, strings.ToUpper(format), quality)
+		data := []byte(buff.Data().ConstData())
+		if !ok {
+			data = []byte("ErrSave2")
+		}
 
-		w := new(bytes.Buffer)
-		r := bytes.NewReader([]byte(buff.Data().ConstData()))
+		l.LoadFinished(id, hex.EncodeToString(data))
+
+		image.DestroyQImage()
 
 		buff.Close()
 		buff.DeleteLater()
-
-		i, err := png.Decode(r)
-		if err == nil {
-			switch strings.ToUpper(format) {
-			case "PNG":
-				png.Encode(w, i)
-			case "JPG", "JPEG":
-				jpeg.Encode(w, i, &jpeg.Options{Quality: quality})
-			case "WEBP":
-				webp.Encode(w, i, &webp.Options{Lossless: false, Quality: float32(quality)})
-			}
-		}
-
-		l.LoadFinished(id, hex.EncodeToString(w.Bytes()))
 
 		view.DeleteLater()
 	})

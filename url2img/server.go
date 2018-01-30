@@ -75,6 +75,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	str, _ := loaded.Get(p.Id)
+	loaded.Remove(p.Id)
+
 	data, err := hex.DecodeString(str.(string))
 	if err != nil {
 		msg := fmt.Sprintf("500 Internal Server Error (%s)", err.Error())
@@ -82,7 +84,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loaded.Remove(p.Id)
+	if strings.HasPrefix(string(data), "Err") {
+		msg := fmt.Sprintf("500 Internal Server Error (%s)", string(data))
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 

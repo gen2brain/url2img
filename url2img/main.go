@@ -8,7 +8,7 @@ import (
 
 const (
 	name    = "url2img"
-	version = "1.1"
+	version = "1.3"
 )
 
 var (
