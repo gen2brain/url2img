@@ -16,6 +16,7 @@ type Params struct {
 	Url     string  `json:"url"`
 	Output  string  `json:"output"`
 	Format  string  `json:"format"`
+	UA      string  `json:"ua"`
 	Quality int     `json:"quality"`
 	Delay   int     `json:"delay"`
 	Width   int     `json:"width"`
@@ -81,6 +82,10 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 			err = fmt.Errorf("invalid format %s", p.Format)
 			return
 		}
+	}
+
+	if r.FormValue("ua") != "" {
+		p.UA = r.FormValue("ua")
 	}
 
 	p.Quality = defQuality

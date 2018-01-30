@@ -17,6 +17,7 @@ Name    | Type      | Default   | Description
 url     | string    |           | Target URL (**required**), http(s):// prefix is optional
 output  | string    | raw       | Output format (raw, base64, html)
 format  | string    | jpg       | Image format (jpg, png, webp)
+ua      | string    |           | User-Agent string
 quality | int       | 85        | Image quality
 delay   | int       | 0         | Delay screenshot after page is loaded (milliseconds)
 width   | int       | 1600      | Viewport width
@@ -102,10 +103,10 @@ If you use one of the provided init scripts just do a reload.
 
 ### Download
 
-Binary is compiled with static Qt and X libraries. It should work on all recent systems (glibc >= 2.14, gcc (stdc++) >= 4.9) without any additional dependencies.
+Binary is compiled with static Qt and X libraries. It should work on all recent systems without any additional dependencies.
 Systemd and OpenRC init scripts are included in dist/.
 
- - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.2/url2img-1.2-64bit.tar.xz)
+ - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.3/url2img-1.3-64bit.tar.xz)
 
 ### Alternative: run in Docker container
 
@@ -123,7 +124,7 @@ running server on port 55888
 
 ### Compile
 
-Install Qt bindings (https://github.com/therecipe/qt) with WebKit (see https://github.com/therecipe/qt#additional-modules).
+Install Qt bindings (https://github.com/therecipe/qt) with WebKit (see https://github.com/therecipe/qt/wiki/Installing-QtWebKit-Module).
 
 Install url2img to $GOPATH/bin:
 

@@ -16,7 +16,6 @@ var (
 )
 
 func main() {
-	loader = NewLoader()
 	server := NewServer()
 
 	flag.StringVar(&server.Bind, "bind-addr", ":55888", "Bind address")
@@ -31,5 +30,8 @@ func main() {
 	server.ListenAndServe()
 	defer server.LogFile.Close()
 
+	println("Listening on ", server.Bind)
+
+	loader = NewLoader()
 	loader.Exec()
 }
