@@ -106,7 +106,7 @@ If you use one of the provided init scripts just do a reload.
 Binary is compiled fully static with musl toolchain. It should work on all systems without any additional dependencies.
 Systemd and OpenRC init scripts are included in dist/.
 
- - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.3/url2img-1.3.tar.xz)
+ - [Linux 64bit](https://github.com/gen2brain/url2img/releases/download/1.4/url2img-1.4.tar.xz)
 
 ### Alternative: run in Docker container
 
