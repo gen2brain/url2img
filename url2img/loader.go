@@ -28,6 +28,7 @@ type Object struct {
 type Loader struct {
 	*Object
 	*widgets.QWidget
+	app *widgets.QApplication
 	Map sync.Map
 }
 
@@ -45,7 +46,7 @@ func NewLoader() *Loader {
 
 	var sm sync.Map
 
-	l := &Loader{NewObject(nil), widget, sm}
+	l := &Loader{NewObject(nil), widget, app, sm}
 
 	l.ConnectLoad(func(data string) {
 		p := NewParams()
@@ -203,5 +204,10 @@ func (l *Loader) setPath(settings *webkit.QWebSettings, path string) {
 
 // Exec starts Qt main loop
 func (l *Loader) Exec() {
-	widgets.QApplication_Exec()
+	l.app.Exec()
+}
+
+// Destroy destroys application
+func (l *Loader) Destroy() {
+	l.app.DestroyQApplication()
 }
