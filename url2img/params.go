@@ -282,7 +282,7 @@ func (p *Params) genId() (err error) {
 
 // validformat checks if image format is valid
 func (p *Params) validFormat(format string) bool {
-	for _, f := range []string{"jpg", "jpeg", "png", "webp"} {
+	for _, f := range []string{"jpg", "jpeg", "png"} {
 		if f == format {
 			return true
 		}
