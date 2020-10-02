@@ -49,10 +49,10 @@ func NewLoader() *Loader {
 	l := &Loader{NewObject(nil), widget, app, sm}
 
 	l.ConnectLoad(func(data string) {
-		p := NewParams()
-		err := p.Unmarshal(data)
+		params := NewParams()
+		err := params.Unmarshal(data)
 		if err == nil {
-			l.LoadPage(p.Url, p.Id, p.Format, p.UA, p.Quality, p.Delay, p.Width, p.Height, p.Zoom, p.Full)
+			l.LoadPage(params)
 		}
 	})
 
@@ -64,21 +64,21 @@ func NewLoader() *Loader {
 }
 
 // LoadPage loads page
-func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, height int, zoom float64, full bool) {
+func (l *Loader) LoadPage(p Params) {
 	view := webkit.NewQWebView(l.QWidget_PTR())
 	view.SetAttribute(core.Qt__WA_DontShowOnScreen, true)
-	view.Resize2(width, width)
+	view.Resize2(p.Width, p.Width)
 
 	page := webkit.NewQWebPage(view.QWidget_PTR())
 	view.SetPage(page)
 
-	page.MainFrame().SetZoomFactor(zoom)
+	page.MainFrame().SetZoomFactor(p.Zoom)
 	page.MainFrame().SetScrollBarPolicy(core.Qt__Horizontal, core.Qt__ScrollBarAlwaysOff)
 	page.MainFrame().SetScrollBarPolicy(core.Qt__Vertical, core.Qt__ScrollBarAlwaysOff)
 
 	page.ConnectUserAgentForUrl(func(url *core.QUrl) string {
-		if ua != "" {
-			return ua
+		if p.UA != "" {
+			return p.UA
 		}
 
 		return page.UserAgentForUrlDefault(url)
@@ -88,37 +88,37 @@ func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, hei
 	l.setPath(page.Settings(), os.TempDir())
 
 	page.ConnectLoadFinished(func(bool) {
-		if delay > 0 && !full {
-			time.Sleep(time.Duration(delay) * time.Millisecond)
+		if p.Delay > 0 && !p.Full {
+			time.Sleep(time.Duration(p.Delay) * time.Millisecond)
 		}
 
-		if full {
+		if p.Full {
 			js := `var d=document;
 				Math.max(Math.max(d.body.scrollHeight, d.documentElement.scrollHeight),
 				Math.max(d.body.offsetHeight, d.documentElement.offsetHeight),
 				Math.max(d.body.clientHeight, d.documentElement.clientHeight));`
 			tmp := true
-			height = page.MainFrame().EvaluateJavaScript(js).ToInt(&tmp)
+			p.Height = page.MainFrame().EvaluateJavaScript(js).ToInt(&tmp)
 
-			if height == 0 {
-				height = defHeight
-			} else if height > 32768 {
-				height = 32768
+			if p.Height == 0 {
+				p.Height = DefHeight
+			} else if p.Height > 32768 {
+				p.Height = 32768
 			}
 
-			page.SetViewportSize(core.NewQSize2(width, height))
-			view.Resize2(width, height)
+			page.SetViewportSize(core.NewQSize2(p.Width, p.Height))
+			view.Resize2(p.Width, p.Height)
 
-			page.MainFrame().EvaluateJavaScript(`window.scrollTo(0, ` + strconv.Itoa(height) + `);`)
+			page.MainFrame().EvaluateJavaScript(`window.scrollTo(0, ` + strconv.Itoa(p.Height) + `);`)
 
-			if delay > 0 {
-				time.Sleep(time.Duration(delay) * time.Millisecond)
+			if p.Delay > 0 {
+				time.Sleep(time.Duration(p.Delay) * time.Millisecond)
 			}
 		}
 
-		image := gui.NewQImage3(width, height, gui.QImage__Format_RGB888)
+		image := gui.NewQImage3(p.Width, p.Height, gui.QImage__Format_RGB888)
 		if image.IsNull() {
-			l.LoadFinished(id, "ErrIsNull")
+			l.LoadFinished(p.Id, "ErrIsNull")
 			view.DeleteLater()
 			return
 		}
@@ -126,7 +126,7 @@ func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, hei
 		painter := gui.NewQPainter()
 		painter.Begin(gui.NewQPaintDeviceFromPointer(image.Pointer()))
 		if !painter.IsActive() {
-			l.LoadFinished(id, "ErrIsActive")
+			l.LoadFinished(p.Id, "ErrIsActive")
 			view.DeleteLater()
 			return
 		}
@@ -141,18 +141,18 @@ func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, hei
 		buff := core.NewQBuffer(view)
 		buff.Open(core.QIODevice__ReadWrite)
 		if !buff.IsWritable() {
-			l.LoadFinished(id, "ErrIsWritable")
+			l.LoadFinished(p.Id, "ErrIsWritable")
 			view.DeleteLater()
 			return
 		}
 
-		ok := image.Save2(buff, strings.ToUpper(format), quality)
+		ok := image.Save2(buff, strings.ToUpper(p.Format), p.Quality)
 		data := []byte(buff.Data().ConstData())
 		if !ok {
 			data = []byte("ErrSave2")
 		}
 
-		l.LoadFinished(id, hex.EncodeToString(data))
+		l.LoadFinished(p.Id, hex.EncodeToString(data))
 
 		image.DestroyQImage()
 
@@ -163,7 +163,7 @@ func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, hei
 	})
 
 	view.Show()
-	view.Load(core.NewQUrl3(url, core.QUrl__TolerantMode))
+	view.Load(core.NewQUrl3(p.Url, core.QUrl__TolerantMode))
 }
 
 // setAttributes sets web page attributes
