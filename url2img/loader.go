@@ -36,8 +36,8 @@ func NewLoader() *Loader {
 	os.Setenv("QT_QPA_PLATFORM", "offscreen")
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
-	app.SetApplicationName(name)
-	app.SetApplicationVersion(version)
+	app.SetApplicationName(Name)
+	app.SetApplicationVersion(Version)
 
 	widget := widgets.NewQWidget(nil, 0)
 	widget.SetAttribute(core.Qt__WA_DontShowOnScreen, true)

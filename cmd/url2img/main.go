@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
 
 	"github.com/gen2brain/url2img/url2img"
 )
@@ -16,7 +18,13 @@ func main() {
 	flag.IntVar(&server.MaxAge, "max-age", 86400, "Cache maximum age (seconds)")
 	flag.IntVar(&server.ReadTimeout, "read-timeout", 5, "Read timeout (seconds)")
 	flag.IntVar(&server.WriteTimeout, "write-timeout", 15, "Write timeout (seconds)")
+	appVersion := flag.Bool("version", false, "Display version information")
 	flag.Parse()
+
+	if *appVersion {
+		fmt.Println(url2img.Name, url2img.Version)
+		os.Exit(0)
+	}
 
 	loader := url2img.NewLoader()
 	server.Loader = loader
@@ -24,7 +32,7 @@ func main() {
 	go server.ListenAndServe()
 	defer server.LogFile.Close()
 
-	println("Listening on", server.Bind)
+	fmt.Println("Listening on", server.Bind)
 
 	server.Loader.Exec()
 }

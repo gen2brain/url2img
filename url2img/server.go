@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	name    = "url2img"
-	version = "1.3"
+	Name    = "url2img"
+	Version = "1.3"
 )
 
 // Server represents HTTP server
@@ -196,7 +196,7 @@ func (s *Server) open() {
 			os.Exit(1)
 		}
 
-		s.Auth = auth.NewBasicAuthenticator(fmt.Sprintf("%s/%s", name, version), auth.HtpasswdFileProvider(s.Htpasswd))
+		s.Auth = auth.NewBasicAuthenticator(fmt.Sprintf("%s/%s", Name, Version), auth.HtpasswdFileProvider(s.Htpasswd))
 	}
 
 	if s.LogFile != nil {
@@ -243,7 +243,7 @@ func newHandler(handler http.Handler, file *os.File, auth *auth.BasicAuth) http.
 		timeFormat := "02/Jan/2006:15:04:05 -0700"
 
 		rw := NewResponseWriter(w)
-		rw.Header().Set("Server", fmt.Sprintf("%s/%s", name, version))
+		rw.Header().Set("Server", fmt.Sprintf("%s/%s", Name, Version))
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 
 		userid := "-"
