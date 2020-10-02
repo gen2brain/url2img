@@ -83,7 +83,7 @@ func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, hei
 	l.setPath(page.Settings(), os.TempDir())
 
 	page.ConnectLoadFinished(func(bool) {
-		if delay > 0 {
+		if delay > 0 && !full {
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 		}
 
@@ -92,7 +92,8 @@ func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, hei
 				Math.max(Math.max(d.body.scrollHeight, d.documentElement.scrollHeight),
 				Math.max(d.body.offsetHeight, d.documentElement.offsetHeight),
 				Math.max(d.body.clientHeight, d.documentElement.clientHeight));`
-			height = page.MainFrame().EvaluateJavaScript(js).ToInt(true)
+			tmp := true
+			height = page.MainFrame().EvaluateJavaScript(js).ToInt(&tmp)
 
 			if height == 0 {
 				height = defHeight
@@ -100,10 +101,14 @@ func (l *Loader) LoadPage(url, id, format, ua string, quality, delay, width, hei
 				height = 32768
 			}
 
-			page.MainFrame().EvaluateJavaScript(`window.scrollTo(0, ` + strconv.Itoa(height) + `);`)
-
 			page.SetViewportSize(core.NewQSize2(width, height))
 			view.Resize2(width, height)
+
+			page.MainFrame().EvaluateJavaScript(`window.scrollTo(0, ` + strconv.Itoa(height) + `);`)
+
+			if delay > 0 {
+				time.Sleep(time.Duration(delay) * time.Millisecond)
+			}
 		}
 
 		image := gui.NewQImage3(width, height, gui.QImage__Format_RGB888)

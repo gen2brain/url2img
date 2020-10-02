@@ -30,7 +30,7 @@ func main() {
 	server.ListenAndServe()
 	defer server.LogFile.Close()
 
-	println("Listening on ", server.Bind)
+	println("Listening on", server.Bind)
 
 	loader = NewLoader()
 	loader.Exec()
