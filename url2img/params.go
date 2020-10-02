@@ -27,15 +27,15 @@ type Params struct {
 
 // Default and maximum values
 const (
-	defOutput = "raw"
-	defFormat = "jpg"
+	DefOutput = "raw"
+	DefFormat = "jpg"
 
-	defQuality = 85
-	defDelay   = 0
-	defWidth   = 1600
-	defHeight  = 1200
-	defZoom    = 1.0
-	defFull    = false
+	DefQuality = 85
+	DefDelay   = 0
+	DefWidth   = 1600
+	DefHeight  = 1200
+	DefZoom    = 1.0
+	DefFull    = false
 
 	maxQuality = 100
 	maxDelay   = 10000
@@ -66,7 +66,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		return
 	}
 
-	p.Output = defOutput
+	p.Output = DefOutput
 	if r.FormValue("output") != "" {
 		p.Output = r.FormValue("output")
 		if !p.validOutput(p.Output) {
@@ -75,7 +75,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
-	p.Format = defFormat
+	p.Format = DefFormat
 	if r.FormValue("format") != "" {
 		p.Format = r.FormValue("format")
 		if !p.validFormat(p.Format) {
@@ -88,7 +88,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		p.UA = r.FormValue("ua")
 	}
 
-	p.Quality = defQuality
+	p.Quality = DefQuality
 	if r.FormValue("quality") != "" {
 		p.Delay, err = strconv.Atoi(r.FormValue("quality"))
 		if err != nil {
@@ -101,7 +101,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
-	p.Delay = defDelay
+	p.Delay = DefDelay
 	if r.FormValue("delay") != "" {
 		p.Delay, err = strconv.Atoi(r.FormValue("delay"))
 		if err != nil {
@@ -114,7 +114,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
-	p.Width = defWidth
+	p.Width = DefWidth
 	if r.FormValue("width") != "" {
 		p.Width, err = strconv.Atoi(r.FormValue("width"))
 		if err != nil {
@@ -127,7 +127,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
-	p.Height = defHeight
+	p.Height = DefHeight
 	if r.FormValue("height") != "" {
 		p.Height, err = strconv.Atoi(r.FormValue("height"))
 		if err != nil {
@@ -140,7 +140,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
-	p.Zoom = defZoom
+	p.Zoom = DefZoom
 	if r.FormValue("zoom") != "" {
 		p.Zoom, err = strconv.ParseFloat(r.FormValue("zoom"), 64)
 		if err != nil {
@@ -153,7 +153,7 @@ func (p *Params) FormValues(r *http.Request) (err error) {
 		}
 	}
 
-	p.Full = defFull
+	p.Full = DefFull
 	if r.FormValue("full") != "" {
 		p.Full = (r.FormValue("full") == "true" || r.FormValue("full") == "1")
 	}
@@ -185,7 +185,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Output == "" {
-		p.Output = defOutput
+		p.Output = DefOutput
 	} else {
 		if !p.validOutput(p.Output) {
 			err = fmt.Errorf("invalid output %s", p.Output)
@@ -194,7 +194,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Format == "" {
-		p.Format = defFormat
+		p.Format = DefFormat
 	} else {
 		if !p.validFormat(p.Format) {
 			err = fmt.Errorf("invalid format %s", p.Format)
@@ -203,7 +203,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Quality == 0 {
-		p.Quality = defQuality
+		p.Quality = DefQuality
 	} else {
 		if p.Quality > maxQuality {
 			err = fmt.Errorf("quality maximum is %d", maxQuality)
@@ -219,7 +219,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Width == 0 {
-		p.Width = defWidth
+		p.Width = DefWidth
 	} else {
 		if p.Width > maxWidth {
 			err = fmt.Errorf("width maximum is %d", maxWidth)
@@ -228,7 +228,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Height == 0 {
-		p.Height = defHeight
+		p.Height = DefHeight
 	} else {
 		if p.Height > maxHeight {
 			err = fmt.Errorf("height maximum is %d", maxHeight)
@@ -237,7 +237,7 @@ func (p *Params) BodyValues(r *http.Request) (err error) {
 	}
 
 	if p.Zoom == 0 {
-		p.Zoom = defZoom
+		p.Zoom = DefZoom
 	} else {
 		if p.Zoom > maxZoom {
 			err = fmt.Errorf("zoom maximum is %f", maxZoom)
