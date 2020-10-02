@@ -16,11 +16,6 @@ import (
 	"github.com/lox/httpcache"
 )
 
-const (
-	Name    = "url2img"
-	Version = "1.3"
-)
-
 // Server represents HTTP server
 type Server struct {
 	Bind         string
