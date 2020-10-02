@@ -1,4 +1,4 @@
-package main
+package url2img
 
 import (
 	"net/http"

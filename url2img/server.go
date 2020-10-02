@@ -1,4 +1,4 @@
-package main
+package url2img
 
 import (
 	"encoding/base64"
@@ -16,6 +16,11 @@ import (
 	"github.com/lox/httpcache"
 )
 
+const (
+	name    = "url2img"
+	version = "1.3"
+)
+
 // Server represents HTTP server
 type Server struct {
 	Bind         string
@@ -27,6 +32,7 @@ type Server struct {
 	MaxAge       int
 	ReadTimeout  int
 	WriteTimeout int
+	Loader       *Loader
 }
 
 // NewServer returns new Server
@@ -66,7 +72,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loader.Load(d)
+	s.Loader.Load(d)
 
 	if !s.wait(p.Id) {
 		msg := fmt.Sprintf("408 Request Timeout (after %d seconds)", s.ReadTimeout+s.WriteTimeout)
@@ -74,8 +80,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	str, _ := loaded.Load(p.Id)
-	loaded.Delete(p.Id)
+	str, _ := s.Loader.Map.Load(p.Id)
+	s.Loader.Map.Delete(p.Id)
 
 	data, err := hex.DecodeString(str.(string))
 	if err != nil {
@@ -157,7 +163,7 @@ func (s *Server) ListenAndServe() {
 		os.Exit(5)
 	}
 
-	go srv.Serve(listener)
+	srv.Serve(listener)
 }
 
 // wait waits for url to load, timeouts after ReadTimeout+WriteTimeout
@@ -166,7 +172,7 @@ func (s *Server) wait(id string) bool {
 	timeout := time.After(time.Duration(s.ReadTimeout+s.WriteTimeout) * time.Second)
 
 	for {
-		_, ok := loaded.Load(id)
+		_, ok := s.Loader.Map.Load(id)
 		select {
 		case <-end:
 			return true

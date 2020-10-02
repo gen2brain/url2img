@@ -1,10 +1,11 @@
-package main
+package url2img
 
 import (
 	"encoding/hex"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/therecipe/qt/core"
@@ -27,6 +28,7 @@ type Object struct {
 type Loader struct {
 	*Object
 	*widgets.QWidget
+	Map sync.Map
 }
 
 // NewLoader returns new loader
@@ -41,7 +43,9 @@ func NewLoader() *Loader {
 	widget.SetAttribute(core.Qt__WA_DontShowOnScreen, true)
 	widget.Show()
 
-	l := &Loader{NewObject(nil), widget}
+	var sm sync.Map
+
+	l := &Loader{NewObject(nil), widget, sm}
 
 	l.ConnectLoad(func(data string) {
 		p := NewParams()
@@ -52,7 +56,7 @@ func NewLoader() *Loader {
 	})
 
 	l.ConnectLoadFinished(func(id, data string) {
-		loaded.Store(id, data)
+		l.Map.Store(id, data)
 	})
 
 	return l

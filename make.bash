@@ -21,6 +21,6 @@ CGO_LDFLAGS="$CGO_LDFLAGS -lQt5Network -lQt5WebKitWidgets -lQt5Widgets -lQt5Gui 
 CGO_LDFLAGS="$CGO_LDFLAGS -lqoffscreen -lqgif -lqjpeg -lQt5ThemeSupport -lQt5FontDatabaseSupport -lQt5ServiceSupport -lQt5EventDispatcherSupport" \
 CGO_LDFLAGS="$CGO_LDFLAGS -lQt5WebKit -lQt5WebKitWidgets -lWTF -lWebCore -lWebCoreTestSupport -lJavaScriptCore -lWTF -lwoff2 -lsqlite3 -lbmalloc -lbrotli -lhyphen -lxslt -lxml2 -licui18n -licuuc -licudata" \
 CGO_LDFLAGS="$CGO_LDFLAGS -lm -lQt5Gui -lfontconfig -lfreetype -luuid -ljpeg -lpng -lqtharfbuzz -lz -lQt5Core -lpthread" \
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -tags 'static minimal' -o build/url2img -v -x -ldflags "-linkmode external -s -w '-extldflags=-static'" github.com/gen2brain/url2img/url2img
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -tags 'static minimal' -o build/url2img -v -x -ldflags "-linkmode external -s -w '-extldflags=-static'" github.com/gen2brain/url2img/cmd/url2img
 
 upx build/url2img
