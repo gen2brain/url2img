@@ -10,6 +10,7 @@ import (
 
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
+	"github.com/therecipe/qt/network"
 	"github.com/therecipe/qt/webkit"
 	"github.com/therecipe/qt/widgets"
 )
@@ -70,6 +71,14 @@ func (l *Loader) LoadPage(p Params) {
 	view.Resize2(p.Width, p.Width)
 
 	page := webkit.NewQWebPage(view.QWidget_PTR())
+
+	// ignore ssl certificate errors
+	networkAccessManager := network.NewQNetworkAccessManager(page)
+	networkAccessManager.ConnectSslErrors(func(reply *network.QNetworkReply, errors []*network.QSslError) {
+		reply.IgnoreSslErrors()
+	})
+	page.SetNetworkAccessManager(networkAccessManager)
+
 	view.SetPage(page)
 
 	page.MainFrame().SetZoomFactor(p.Zoom)
