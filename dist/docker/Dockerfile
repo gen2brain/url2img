@@ -1,4 +1,4 @@
-FROM ubuntu:artful
+FROM ubuntu:bionic
 
 # Set environment variables
 ENV DEBIAN_FRONTEND noninteractive
